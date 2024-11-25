@@ -1,0 +1,162 @@
+#!/bin/bash
+
+# Viking Proyect - Restaurar configuración de fábrica v1.0
+# Este script eliminará toda la información personal y restaurará el sistema al estado original.
+
+# Colores
+GREEN="\e[32m"
+RED="\e[31m"
+BLUE="\e[34m"
+RESET="\e[0m"
+
+# Variables de estado
+TASKS=(
+    "Guardar configuraciones de red y SSH"
+    "Eliminar archivos personales en /home/pi"
+    "Restaurar configuraciones predeterminadas"
+    "Reconfigurar el sistema"
+    "Eliminar paquetes adicionales instalados"
+)
+RESULTS=()  # Aquí se guardarán los resultados de las tareas
+
+# Función para mostrar el listado de tareas
+list_tasks() {
+    echo "Tareas que se realizarán:"
+    for i in "${!TASKS[@]}"; do
+        echo "$((i+1)). ${TASKS[$i]}"
+    done
+}
+
+# Mostrar el cartel ASCII
+
+🇷​​​​​🇪​​​​​🇸​​​​​🇹​​​​​🇴​​​​​🇷​​​​​🇪​​​​​🇵​​​​​🇮​​​​​
+
+🇹​​​​​🇭​​​​​🇮​​​​​🇸​​​​​ 🇸​​​​​🇨​​​​​🇷​​​​​🇮​​​​​🇵​​​​​🇹​​​​​ 🇨​​​​​🇴​​​​​🇲​​​​​🇵​​​​​🇱​​​​​🇪​​​​​🇹​​​​​🇪​​​​​🇱​​​​​🇾​​​​​ 🇷​​​​​🇪​​​​​🇸​​​​​🇹​​​​​🇴​​​​​🇷​​​​​🇪​​​​​🇸​​​​​ 🇹​​​​​🇭​​​​​🇪​​​​​ 🇷​​​​​🇦​​​​​🇸​​​​​🇵​​​​​🇧​​​​​🇮​​​​​🇦​​​​​🇳​​​​​ 🇸​​​​​🇾​​​​​🇸​​​​​🇹​​​​​🇪​​​​​🇲​​​​​ 🇹​​​​​🇴​​​​​ 🇮​​​​​🇹​​​​​🇸​​​​​ 🇴​​​​​🇷​​​​​🇮​​​​​🇬​​​​​🇮​​​​​🇳​​​​​🇦​​​​​🇱​​​​​ 🇸​​​​​🇹​​​​​🇦​​​​​🇹​​​​​🇪​​​​​.
+
+
+
+
+
+
+echo "============================================================================="
+echo "                                                                             "
+echo "                         RestorePI                                           "
+echo "                                                                             "
+echo " Este script restaura completamente el sistema Raspbian a su estado original."
+echo "                                                                             "
+echo "                                                                             "
+echo "                                               v1.0                          "
+echo "                                                            Autor: Viking    "
+echo "                                                                             "
+echo "============================================================================="
+
+# Mostrar advertencia y confirmación
+echo ""
+echo "⚠️  IMPORTANTE ⚠️"
+echo "Este script eliminará TODOS los archivos personales y configuraciones personalizadas."
+echo "Una vez ejecutado, la información no podrá recuperarse."
+echo ""
+list_tasks
+echo ""
+echo "¿Deseas continuar? (yes/no)"
+read CONFIRMATION
+
+if [ "$CONFIRMATION" != "yes" ]; then
+    echo "Operación cancelada."
+    exit 1
+fi
+
+# Guardar configuraciones de red y SSH
+echo ""
+echo "¿Quieres guardar las configuraciones de red (Wi-Fi y cableada) y SSH antes de proceder? (yes/no)"
+read SAVE_NETWORK_SSH
+
+if [ "$SAVE_NETWORK_SSH" != "yes" ]; then
+    RESULTS+=("$BLUE Tarea omitida por el usuario: Guardar configuraciones de red y SSH $RESET")
+fi
+
+# Función para mostrar el progreso
+show_progress() {
+    local percent=$1
+    local progress_bar="|"
+    local total=50  # Tamaño de la barra
+
+    for ((i = 0; i < total; i++)); do
+        if ((i < percent * total / 100)); then
+            progress_bar+="="
+        else
+            progress_bar+=" "
+        fi
+    done
+    progress_bar+="| $percent%"
+
+    echo -ne "\r$progress_bar"
+}
+
+# Tarea 1: Guardar configuraciones de red y SSH
+if [ "$SAVE_NETWORK_SSH" == "yes" ]; then
+    BACKUP_DIR="/home/pi/backup_viking"
+    mkdir -p "$BACKUP_DIR"
+    cp /etc/wpa_supplicant/wpa_supplicant.conf "$BACKUP_DIR" 2>/dev/null || echo "No se encontraron configuraciones de Wi-Fi."
+    cp /etc/network/interfaces "$BACKUP_DIR" 2>/dev/null || echo "No se encontraron configuraciones de red cableada."
+    cp -r /etc/ssh "$BACKUP_DIR" 2>/dev/null || echo "No se encontraron configuraciones de SSH."
+    if [ $? -eq 0 ]; then
+        RESULTS+=("$GREEN Configuraciones de red y SSH guardadas exitosamente $RESET")
+    else
+        RESULTS+=("$RED Fallo al guardar configuraciones de red y SSH $RESET")
+    fi
+fi
+show_progress 20
+
+# Tarea 2: Eliminar archivos personales
+echo "Eliminando archivos personales en /home/pi..."
+rm -rf /home/pi/*
+if [ $? -eq 0 ]; then
+    RESULTS+=("$GREEN Archivos personales eliminados exitosamente $RESET")
+else
+    RESULTS+=("$RED Fallo al eliminar archivos personales $RESET")
+fi
+show_progress 40
+
+# Tarea 3: Restaurar configuraciones predeterminadas
+echo "Restaurando configuraciones predeterminadas..."
+cp -r /etc/skel/* /home/pi/
+if [ $? -eq 0 ]; then
+    RESULTS+=("$GREEN Configuraciones predeterminadas restauradas exitosamente $RESET")
+else
+    RESULTS+=("$RED Fallo al restaurar configuraciones predeterminadas $RESET")
+fi
+show_progress 60
+
+# Tarea 4: Reconfigurar el sistema
+echo "Reconfigurando el sistema..."
+sudo dpkg-reconfigure --default-priority locales tzdata
+if [ $? -eq 0 ]; then
+    RESULTS+=("$GREEN Sistema reconfigurado exitosamente $RESET")
+else
+    RESULTS+=("$RED Fallo al reconfigurar el sistema $RESET")
+fi
+show_progress 80
+
+# Tarea 5: Eliminar paquetes adicionales
+echo "Eliminando paquetes adicionales..."
+sudo apt-get autoremove --purge -y
+sudo apt-get autoclean -y
+if [ $? -eq 0 ]; then
+    RESULTS+=("$GREEN Paquetes adicionales eliminados exitosamente $RESET")
+else
+    RESULTS+=("$RED Fallo al eliminar paquetes adicionales $RESET")
+fi
+show_progress 100
+
+# Mostrar resultados finales
+echo ""
+echo "============================================================"
+echo "Restauración completada. Resultados:"
+for result in "${RESULTS[@]}"; do
+    echo -e "$result"
+done
+echo "============================================================"
+echo "Gracias por usar Viking Proyect v1.0."
+echo "Autor: Viking"
+echo "============================================================"

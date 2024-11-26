@@ -27,34 +27,20 @@ list_tasks() {
     done
 }
 
-# Mostrar el cartel ASCII
-
-🇷​​​​​🇪​​​​​🇸​​​​​🇹​​​​​🇴​​​​​🇷​​​​​🇪​​​​​🇵​​​​​🇮​​​​​
-
-🇹​​​​​🇭​​​​​🇮​​​​​🇸​​​​​ 🇸​​​​​🇨​​​​​🇷​​​​​🇮​​​​​🇵​​​​​🇹​​​​​ 🇨​​​​​🇴​​​​​🇲​​​​​🇵​​​​​🇱​​​​​🇪​​​​​🇹​​​​​🇪​​​​​🇱​​​​​🇾​​​​​ 🇷​​​​​🇪​​​​​🇸​​​​​🇹​​​​​🇴​​​​​🇷​​​​​🇪​​​​​🇸​​​​​ 🇹​​​​​🇭​​​​​🇪​​​​​ 🇷​​​​​🇦​​​​​🇸​​​​​🇵​​​​​🇧​​​​​🇮​​​​​🇦​​​​​🇳​​​​​ 🇸​​​​​🇾​​​​​🇸​​​​​🇹​​​​​🇪​​​​​🇲​​​​​ 🇹​​​​​🇴​​​​​ 🇮​​​​​🇹​​​​​🇸​​​​​ 🇴​​​​​🇷​​​​​🇮​​​​​🇬​​​​​🇮​​​​​🇳​​​​​🇦​​​​​🇱​​​​​ 🇸​​​​​🇹​​​​​🇦​​​​​🇹​​​​​🇪​​​​​.
-
-
-
-
-
-
+# Mostrar cartel ASCII
 echo "============================================================================="
-echo "                                                                             "
-echo "                         RestorePI                                           "
-echo "                                                                             "
+echo "                                                                           "
+echo "                         RestorePI                                         "
 echo " Este script restaura completamente el sistema Raspbian a su estado original."
-echo "                                                                             "
-echo "                                                                             "
 echo "                                               v1.0                          "
-echo "                                                            Autor: Viking    "
-echo "                                                                             "
+echo "                                                                            "
 echo "============================================================================="
 
 # Mostrar advertencia y confirmación
 echo ""
 echo "⚠️  IMPORTANTE ⚠️"
 echo "Este script eliminará TODOS los archivos personales y configuraciones personalizadas."
-echo "Una vez ejecutado, la información no podrá recuperarse."
+echo "También se eliminarán programas instalados manualmente y sus datos relacionados."
 echo ""
 list_tasks
 echo ""
@@ -62,6 +48,38 @@ echo "¿Deseas continuar? (yes/no)"
 read CONFIRMATION
 
 if [ "$CONFIRMATION" != "yes" ]; then
+    echo "Operación cancelada."
+    exit 1
+fi
+
+# Listar programas instalados por el usuario
+echo ""
+echo "Identificando programas instalados por el usuario..."
+DEFAULT_PACKAGES="/tmp/default_packages.txt"
+CURRENT_PACKAGES="/tmp/current_packages.txt"
+USER_INSTALLED_PACKAGES="/tmp/user_installed_packages.txt"
+
+# Obtener lista de paquetes por defecto y los actualmente instalados
+dpkg --get-selections | awk '{print $1}' > "$CURRENT_PACKAGES"
+wget -qO- https://raw.githubusercontent.com/RPi-Distro/pi-gen/master/stage2/00-packages > "$DEFAULT_PACKAGES" 2>/dev/null
+
+# Determinar paquetes instalados por el usuario
+comm -23 <(sort "$CURRENT_PACKAGES") <(sort "$DEFAULT_PACKAGES") > "$USER_INSTALLED_PACKAGES"
+
+if [ -s "$USER_INSTALLED_PACKAGES" ]; then
+    echo "Se encontraron los siguientes programas instalados manualmente:"
+    cat "$USER_INSTALLED_PACKAGES"
+    echo ""
+    echo "⚠️  Advertencia: Todos los datos relacionados a estos programas también podrían perderse."
+else
+    echo "No se encontraron programas instalados manualmente."
+fi
+
+echo ""
+echo "¿Deseas continuar con la restauración? (yes/no)"
+read FINAL_CONFIRMATION
+
+if [ "$FINAL_CONFIRMATION" != "yes" ]; then
     echo "Operación cancelada."
     exit 1
 fi
@@ -74,24 +92,6 @@ read SAVE_NETWORK_SSH
 if [ "$SAVE_NETWORK_SSH" != "yes" ]; then
     RESULTS+=("$BLUE Tarea omitida por el usuario: Guardar configuraciones de red y SSH $RESET")
 fi
-
-# Función para mostrar el progreso
-show_progress() {
-    local percent=$1
-    local progress_bar="|"
-    local total=50  # Tamaño de la barra
-
-    for ((i = 0; i < total; i++)); do
-        if ((i < percent * total / 100)); then
-            progress_bar+="="
-        else
-            progress_bar+=" "
-        fi
-    done
-    progress_bar+="| $percent%"
-
-    echo -ne "\r$progress_bar"
-}
 
 # Tarea 1: Guardar configuraciones de red y SSH
 if [ "$SAVE_NETWORK_SSH" == "yes" ]; then
@@ -106,7 +106,6 @@ if [ "$SAVE_NETWORK_SSH" == "yes" ]; then
         RESULTS+=("$RED Fallo al guardar configuraciones de red y SSH $RESET")
     fi
 fi
-show_progress 20
 
 # Tarea 2: Eliminar archivos personales
 echo "Eliminando archivos personales en /home/pi..."
@@ -116,7 +115,6 @@ if [ $? -eq 0 ]; then
 else
     RESULTS+=("$RED Fallo al eliminar archivos personales $RESET")
 fi
-show_progress 40
 
 # Tarea 3: Restaurar configuraciones predeterminadas
 echo "Restaurando configuraciones predeterminadas..."
@@ -126,7 +124,6 @@ if [ $? -eq 0 ]; then
 else
     RESULTS+=("$RED Fallo al restaurar configuraciones predeterminadas $RESET")
 fi
-show_progress 60
 
 # Tarea 4: Reconfigurar el sistema
 echo "Reconfigurando el sistema..."
@@ -136,7 +133,6 @@ if [ $? -eq 0 ]; then
 else
     RESULTS+=("$RED Fallo al reconfigurar el sistema $RESET")
 fi
-show_progress 80
 
 # Tarea 5: Eliminar paquetes adicionales
 echo "Eliminando paquetes adicionales..."
@@ -147,7 +143,6 @@ if [ $? -eq 0 ]; then
 else
     RESULTS+=("$RED Fallo al eliminar paquetes adicionales $RESET")
 fi
-show_progress 100
 
 # Mostrar resultados finales
 echo ""
@@ -158,5 +153,16 @@ for result in "${RESULTS[@]}"; do
 done
 echo "============================================================"
 echo "Gracias por usar Viking Proyect v1.0."
-echo "Autor: Viking"
+echo "El sistema se reiniciará automáticamente en 20 segundos..."
 echo "============================================================"
+
+# Limpiar archivos temporales
+rm -f "$DEFAULT_PACKAGES" "$CURRENT_PACKAGES" "$USER_INSTALLED_PACKAGES"
+
+echo " ******************************************* "
+echo " * El sistema se reiniciará en 20 segundos * "
+echo " ******************************************* "
+
+# Esperar 20 segundos y reiniciar
+sleep 20
+sudo reboot

@@ -33,7 +33,7 @@ echo "                                     
 echo "                         RestorePI                                         "
 echo " Este script restaura completamente el sistema Raspbian a su estado original."
 echo "                                               v1.0                          "
-echo "                                                                            "
+echo "                                                                           "
 echo "============================================================================="
 
 # Mostrar advertencia y confirmación
@@ -158,10 +158,6 @@ echo "============================================================"
 
 # Limpiar archivos temporales
 rm -f "$DEFAULT_PACKAGES" "$CURRENT_PACKAGES" "$USER_INSTALLED_PACKAGES"
-
-echo " ******************************************* "
-echo " * El sistema se reiniciará en 20 segundos * "
-echo " ******************************************* "
 
 # Esperar 20 segundos y reiniciar
 sleep 20

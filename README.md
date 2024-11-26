@@ -15,16 +15,20 @@ Código
 sudo su
 
 Código
+
 mkdir /tmp/restorepi
 cd /tmp/restorepi
 
 Código
+
 wget https://github.com/VikingRestorePI/restorepi.sh
 
 Código
-chmod +x restorepi.sh
+
+chmod +xrestorepi.sh
 
 Código
+
 sudo ./restorepi.sh
 
 Advertencias
@@ -53,16 +57,20 @@ Code
 sudo su
 
 Code
+
 mkdir /tmp/restorepi
 cd /tmp/restorepi
 
 Code
+
 wget https://github.com/VikingRestorePI/restorepi.sh
 
 Code
+
 chmod +x restorepi.sh
 
 Code
+
 sudo ./restorepi.sh
 
 Warnings
@@ -91,16 +99,20 @@ RestorePI — это скрипт, предназначенный для быс�
 sudo su
 
 Код
+
 mkdir /tmp/restorepi
 cd /tmp/restorepi
 
 Код
+
 wget https://github.com/VikingRestorePI/restorepi.sh
 
 Код
+
 chmod +x restorepi.sh
 
 Код
+
 sudo ./restorepi.sh
 
 Предупреждения
@@ -130,16 +142,20 @@ RestorePI 是一个脚本，旨在快速自动地将你的 Raspbian 系统恢复
 sudo su
 
 代码
+
 mkdir /tmp/restorepi
 cd /tmp/restorepi
 
 代码
+
 wget https://github.com/VikingRestorePI/restorepi.sh
 
 代码
+
 chmod +x restorepi.sh
 
 代码
+
 sudo ./restorepi.sh
 
 警告
@@ -170,16 +186,20 @@ RestorePI를 사용해야 하는 이유?
 sudo su
 
 코드
+
 mkdir /tmp/restorepi
 cd /tmp/restorepi
 
 코드
+
 wget https://github.com/VikingRestorePI/restorepi.sh
 
 코드
+
 chmod +x restorepi.sh
 
 코드
+
 sudo ./restorepi.sh
 
 경고

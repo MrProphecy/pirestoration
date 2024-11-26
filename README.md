@@ -25,7 +25,7 @@ wget https://github.com/VikingRestorePI/restorepi.sh
 
 Código
 
-chmod +xrestorepi.sh
+chmod +x restorepi.sh
 
 Código
 
@@ -87,6 +87,7 @@ Note: This script is provided "as is," without any warranty. Use at your own ris
 Русский
 
 ---------------------------------------------------------------------------------------------------------------
+
 Описание
 RestorePI — это скрипт, предназначенный для быстрого и автоматического восстановления системы Raspbian до заводского состояния. Он удаляет пользовательские настройки, личные данные и вручную установленные программы, оставляя систему чистой и функциональной.
 
